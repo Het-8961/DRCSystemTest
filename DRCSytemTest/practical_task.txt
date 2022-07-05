@@ -1,0 +1,22 @@
+Please find the below given practical task (Max. allowed time: 5 Hours):
+
+
+Login, Registration, OTP verification:-
+
+1. Make use of virtualenv
+2. To be developed using Django >= 2.0
+3. Users can register with Email, Mobile, Username, Password.
+4. Send a welcome email to the user (to be printed in the terminal only)
+5. OTP-based login. The user needs to enter Mobile no. and he/she will get OTP. After
+OTP validation user can log in. (Note: You can print OTP in logs. Don't use any 3rd
+party service for OTP)
+6. In case of 3 incorrect attempts, the user login should be blocked for 5 minutes.
+7. User can add more than one email address and make one address primary via user_profile.
+8. Session must be stored in DB.
+9. Use MySQL as DBMS.
+10. Task must be run perfectly on the Linux machine.
+
+As a response, we are expecting a git repo with source files and a README.md file containing the steps to run your project.
+We will consider the commits done during a particular time duration, you need to push
+the code at least in 5 different commits.
+Do not use ready-to-go libraries which tend to no code done by you.
