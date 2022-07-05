@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+    <title>
+        {% block title %}
+          Untitled Document
+      {% endblock title %}
+</title>
+<!--<link href="{% static 'main.css' %}" rel="stylesheet" type="text/css">-->
+</head>
+<body>
+<div id="wrapper">
+  <header id="header">
+<!--    <div id="logo"><img src="{% static 'DRCSystemLogo.png' %}" alt=""/></div>-->
+    <div style="margin-left:150px"id="topbanner">
+        <img src="{% static 'DRCSystemLogo.png' %}" width="800" height="200"  alt=""/></div>
+  </header>
+    {%  if success != '' %}
+    <div style="text-align:center;">
+        <h2>
+            {{ successMessage }}
+        </h2>
+    </div>
+    {% endif %}
+  <section style="display:flex;justify-content:center;margin-top:60px">
+    {% block content %}
+      {% endblock content %}
+
+   </section>
+   <section style="display:flex;justify-content:center;margin-top:60px;">
+<button id="login" text="Login" >Login</button>&nbsp;&nbsp;&nbsp;
+  <button id="signUp" text="SignUp">SignUp</button>
+     </section>
+</div>
+<script>
+    document.getElementById("login").onclick = function(){window.location.href = "/login"};
+    document.getElementById("signUp").onclick = function(){window.location.href = "/signUp"};
+</script>
+</body>
+</html>
+
