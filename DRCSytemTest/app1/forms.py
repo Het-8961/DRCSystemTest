@@ -14,3 +14,7 @@ class SignUpForm(ModelForm):
         widgets = {
             'password': forms.PasswordInput(),
         }
+
+class LoginForm(forms.Form):
+    UserName = forms.CharField(max_length=20, required=False,help_text="Username or Mobile")
+    Password = forms.CharField(widget=forms.PasswordInput, required=False)
