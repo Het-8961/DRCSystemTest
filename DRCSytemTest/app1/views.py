@@ -1,4 +1,5 @@
-from .forms import SignUpForm, LoginForm
+
+from .forms import SignUpForm, LoginForm, TwoFactAuth
 from .models import signUp as signUpModel
 from django.http import HttpResponseRedirect
 from django.shortcuts import render,HttpResponse,redirect
@@ -6,6 +7,10 @@ import logging
 from datetime import datetime, timedelta
 from .Functions import Functions
 from .LoginAttemptStatus import LoginAttemptStatus
+import base64
+import pyotp
+from time import time
+
 def signUp(request):
     submitted = False
     if request.method == 'POST':
@@ -27,14 +32,9 @@ def login(request):
     submitted = False
     if request.method == 'POST':
         form = LoginForm(request.POST)
-        print("qqqq")
         if form.is_valid():
-            print("12121iowie")
 
             if request.POST.get('UserName') == None:
-                print(type(form))
-                print(type(form.cleaned_data))
-                print("riowie")
                 errorMessage = "Invalid Username/Mobile no."
                 return render(request, 'app1/loginPage.html',
                               {'form': form, 'success': "", 'error': errorMessage})
@@ -51,7 +51,6 @@ def login(request):
                 errorMessage = "Invalid Username/Mobile no."
                 return render(request, 'app1/loginPage.html',
                               {'form': form, 'submitted': submitted,'success': "", 'error': errorMessage})
-                # return HttpResponse("Invalid Username/Mobile no")
             elif loginFlag == LoginAttemptStatus.WrongPassword:
                 query.loginAttempt += 1
                 query.lastLoginAttemptedTime = datetime.now()
@@ -60,15 +59,13 @@ def login(request):
                     query.isBlocked = True
                     query.lastLoginAttemptedTime =datetime.now()
                     query.save()
-                    failureMessaage = "You are Blocked for 10 minutes!"
+                    failureMessaage = "You are Blocked for 5 minutes!"
                     return render(request, 'base.html', {'success': "Fail", 'failureMessage':failureMessaage})
-                    # return HttpResponse("You are Blocked for 10 minutes!")
                 else:
                     query.save()
                     errorMessage = "Wrong Password. You have {} chances to Login.".format(3-query.loginAttempt)
                     return render(request, 'app1/loginPage.html',
                                   {'form': form, 'submitted': submitted,'success': "",'error':errorMessage})
-                    # return HttpResponse("Wrong Password")
             elif loginFlag == LoginAttemptStatus.RightPassword:
                 try:
                     query.loginAttempt = 0
@@ -86,12 +83,9 @@ def login(request):
                     successMessaage = "You Are Unblocked.. please login again!"
                     return render(request, 'base.html', {'success': "success", 'successMessaage': successMessaage})
 
-                    # return HttpResponse("You Are Unblocked.. please login again!")
                 else:
                     failureMessaage = "You are blocked. Please wait {} seconds".format(int(abs(waitingTime.total_seconds())))
                     return render(request, 'base.html', {'success': "Fail", 'failureMessage': failureMessaage})
-
-                    # return HttpResponse("You are blocked. Please wait {} seconds".format(int(abs(waitingTime.total_seconds()))))
 
     else:
         form = LoginForm()
@@ -101,7 +95,81 @@ def login(request):
 
 def logout(request):
     try:
-        del request.session['member_id']
+        del request.session['mobile']
+        del request.session['counter']
+        del request.session['otp']
     except KeyError:
         pass
     return HttpResponse("You're logged out.")
+
+def twoFactorAuth(request):
+    submitted = False
+    if request.session.get("mobile") == None:
+        failureMessaage = "Session time-out. Please visit Login Page."
+        return render(request, 'base.html', {'success': "Fail", 'failureMessage': failureMessaage})
+
+
+    if request.method == 'POST':
+            form = TwoFactAuth(request.POST)
+
+            if form.is_valid():
+                if request.POST.get("OTP") == None:
+                    otpData = ""
+                else:
+                    otpData=request.POST['OTP']
+                    if not (otpData.isnumeric()) or int(otpData)<0 or int(otpData)>999999:
+                        otpData=""
+                if otpData==request.session['otp']:
+
+                    request.session["counter"] = 0
+                    CongratsMessaage="Congrets! You have logged in successfully!"
+                    return render(request, 'base.html',
+                                  {'error': '', 'success': "Success", 'successMessage': CongratsMessaage})
+                else:
+                    if request.session["counter"] >= 3:
+                        m = signUpModel.objects.filter(mobile=request.session.get("mobile"))
+                        # print(m[0].isBlocked)
+                        # changes needed
+                        m[0].isBlocked = True
+                        # print(m[0].isBlocked)
+                        m[0].lastLoginAttemptedTime = datetime.now()
+                        m[0].save()
+                        del request.session['mobile']
+                        del request.session['counter']
+                        del request.session['otp']
+                        failureMessaage = "You are Blocked for 5 minutes!"
+                        return render(request, 'base.html', {'success': "Fail", 'failureMessage': failureMessaage})
+                    form = TwoFactAuth()
+                    otp = Functions.generateOtp(request.session["counter"],request.session['mobile'])
+                    request.session["counter"] += 1
+                    request.session['otp'] = otp
+                    print(otp)
+                    logging.info(otp)
+                    errorMessage = "Invalid OTP. You have only {} change to Login.".format(4-request.session["counter"])
+                    return render(request, 'app1/otpPage.html',
+                                  {'form': form, 'submitted': submitted, 'success': "", 'error': errorMessage})
+
+    else:
+        form = TwoFactAuth()
+        if request.session.get("mobile") == None:
+            failureMessaage = "Session time-out. Please visit Login Page."
+            return render(request, 'base.html', {'success': "Fail", 'failureMessage': failureMessaage})
+        if request.session["counter"] >= 3:
+            m = signUpModel.objects.filter(mobile=request.session.get("mobile"))
+            # print(m[0].isBlocked)
+            # changes needed
+            m[0].isBlocked = True
+            # print(m[0].isBlocked)
+            m[0].lastLoginAttemptedTime = datetime.now()
+            m[0].save()
+            del request.session['mobile']
+            del request.session['counter']
+            del request.session['otp']
+            failureMessaage = "You are Blocked for 5 minutes!"
+            return render(request, 'base.html', {'success': "Fail", 'failureMessage': failureMessaage})
+        otp = Functions.generateOtp(request.session["counter"],request.session['mobile'])
+        request.session['otp'] = otp
+        request.session["counter"] += 1
+        print(otp)
+        return render(request, 'app1/otpPage.html', {'form': form, 'submitted': submitted,'error':''})
+    pass
