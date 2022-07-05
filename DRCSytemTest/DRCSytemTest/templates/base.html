@@ -17,10 +17,16 @@
     <div style="margin-left:150px"id="topbanner">
         <img src="{% static 'DRCSystemLogo.png' %}" width="800" height="200"  alt=""/></div>
   </header>
-    {%  if success != '' %}
+    {%  if success == 'Success' %}
     <div style="text-align:center;">
         <h2>
             {{ successMessage }}
+        </h2>
+    </div>
+    {% elif success == 'Fail' %}
+    <div style="text-align:center;">
+        <h2>
+            {{ failureMessage }}
         </h2>
     </div>
     {% endif %}
