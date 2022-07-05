@@ -1,3 +1,6 @@
+import base64
+import pyotp
+from time import time
 from .LoginAttemptStatus import LoginAttemptStatus
 from datetime import datetime,timedelta
 from .forms import signUp as signUpModel
@@ -32,3 +35,12 @@ class Functions:
                         return (query[0], LoginAttemptStatus.WrongPassword)
             else:
                 return None, LoginAttemptStatus.UserNameNotFound
+
+
+    @staticmethod
+    def generateOtp(count, mobile):
+
+        keygen = str(mobile) + str(time())
+        key = base64.b32encode(keygen.encode())
+        OTP = pyotp.HOTP(key)
+        return OTP.at(count)

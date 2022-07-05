@@ -18,3 +18,7 @@ class SignUpForm(ModelForm):
 class LoginForm(forms.Form):
     UserName = forms.CharField(max_length=20, required=False,help_text="Username or Mobile")
     Password = forms.CharField(widget=forms.PasswordInput, required=False)
+
+class TwoFactAuth(forms.Form):
+    # OTP = forms.CharField(widget=forms.TextInput(attrs={'type':'number'}),required=True)
+    OTP = forms.IntegerField(required=False)
