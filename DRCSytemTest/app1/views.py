@@ -7,9 +7,6 @@ import logging
 from datetime import datetime, timedelta
 from .Functions import Functions
 from .LoginAttemptStatus import LoginAttemptStatus
-import base64
-import pyotp
-from time import time
 
 def signUp(request):
     submitted = False
